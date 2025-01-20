@@ -7,34 +7,30 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 export const maxDuration = 30;
 
-// Configure body parser
-export const bodyParser = {
-  sizeLimit: '10mb'
+export const config = {
+  api: {
+    bodyParser: {
+      sizeLimit: '10mb'
+    }
+  }
 };
 
 export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData();
-    const image = formData.get("image") as File;
+    const imageFile = formData.get('image') as File;
     
-    if (!image) {
-      return NextResponse.json(
-        { error: "No image provided" },
-        { status: 400 }
-      );
+    if (!imageFile) {
+      return NextResponse.json({ error: 'No file uploaded' }, { status: 400 });
     }
 
-    // Check file size (10MB)
-    const MAX_SIZE = 10 * 1024 * 1024;
-    if (image.size > MAX_SIZE) {
-      return NextResponse.json(
-        { error: "Image size should be less than 10MB" },
-        { status: 400 }
-      );
+    // Check file size (10MB limit)
+    if (imageFile.size > 10 * 1024 * 1024) {
+      return NextResponse.json({ error: 'File size exceeds 10MB limit' }, { status: 400 });
     }
 
     // Convert image to base64
-    const bytes = await image.arrayBuffer();
+    const bytes = await imageFile.arrayBuffer();
     const buffer = Buffer.from(bytes);
     const base64Image = buffer.toString('base64');
 
