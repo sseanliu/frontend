@@ -2,11 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { spawn, type ChildProcess } from "child_process";
 import { join } from "path";
 
-export const config = {
-  api: {
-    bodyParser: false,
-  },
-};
+// New way to configure the API route
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+export const maxDuration = 30;
 
 export async function POST(request: NextRequest) {
   try {
