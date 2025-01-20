@@ -7,13 +7,10 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 export const maxDuration = 30;
 
-export const config = {
-  api: {
-    bodyParser: {
-      sizeLimit: '10mb'
-    }
-  }
-};
+// Remove the old config export and use route segment config
+export const fetchCache = 'force-no-store';
+export const revalidate = 0;
+export const bodySize = '10mb';
 
 export async function POST(request: NextRequest) {
   try {
