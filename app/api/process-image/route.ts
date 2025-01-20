@@ -65,7 +65,8 @@ finally:
         reject(new Error('Processing timeout'));
       }, 25000); // 25 seconds timeout
 
-      pythonProcess = spawn('python', ['-c', pythonScript], {
+      const pythonPath = process.env.PYTHON_PATH || 'python';
+      pythonProcess = spawn(pythonPath, ['-c', pythonScript], {
         env: { ...process.env, PYTHONPATH: join(process.cwd(), "lib") }
       });
       

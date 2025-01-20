@@ -12,6 +12,9 @@ const nextConfig = {
     }
     return config
   },
+  env: {
+    PYTHON_PATH: process.env.PYTHON_PATH || 'python',
+  }
 }
 
 module.exports = nextConfig 
