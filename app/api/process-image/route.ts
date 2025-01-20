@@ -2,15 +2,14 @@ import { NextRequest, NextResponse } from "next/server";
 import { spawn, type ChildProcess } from "child_process";
 import { join } from "path";
 
-// New way to configure the API route
+// Route segment configuration
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 export const maxDuration = 30;
 
-// Remove the old config export and use route segment config
+// Configure response caching
 export const fetchCache = 'force-no-store';
 export const revalidate = 0;
-export const bodySize = '10mb';
 
 export async function POST(request: NextRequest) {
   try {
