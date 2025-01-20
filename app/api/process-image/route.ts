@@ -36,20 +36,38 @@ export async function POST(request: NextRequest) {
     // Create Python script content
     const pythonScript = `
 import sys
-sys.path.append("${join(process.cwd(), "lib")}")
-import canny
+import os
+print("Current working directory:", os.getcwd())
+print("Python path:", sys.path)
+
+lib_path = os.path.join(os.getcwd(), "lib")
+print("Adding lib path:", lib_path)
+sys.path.append(lib_path)
+
+try:
+    import canny
+    print("Successfully imported canny module")
+except Exception as e:
+    print("Error importing canny module:", str(e))
+    sys.exit(1)
+
 import json
 import gc
 
 try:
+    print("Processing image...")
     svg1, svg2 = canny.process_image("${base64Image}")
+    print("Image processing complete")
     print(json.dumps({"sigma1": svg1, "sigma2": svg2}))
 except Exception as e:
+    print("Error during processing:", str(e))
     print(json.dumps({"error": str(e)}))
 finally:
     gc.collect()  # Force garbage collection
 `;
 
+    console.log('Executing Python script...');
+    
     // Execute Python script with reduced buffer size
     const result = await new Promise((resolve, reject) => {
       let pythonProcess: ChildProcess | null = null;
@@ -61,26 +79,37 @@ finally:
         reject(new Error('Processing timeout'));
       }, 25000); // 25 seconds timeout
 
-      const pythonPath = process.env.PYTHON_PATH || 'python';
+      const pythonPath = process.env.PYTHON_PATH || 'python3';
+      console.log('Using Python path:', pythonPath);
+      
       pythonProcess = spawn(pythonPath, ['-c', pythonScript], {
-        env: { ...process.env, PYTHONPATH: join(process.cwd(), "lib") }
+        env: { 
+          ...process.env, 
+          PYTHONPATH: join(process.cwd(), "lib"),
+          PYTHONUNBUFFERED: "1"
+        }
       });
       
       let output = '';
       let error = '';
 
       pythonProcess.stdout?.on('data', (data: Buffer) => {
-        output += data.toString();
+        const str = data.toString();
+        console.log('Python stdout:', str);
+        output += str;
       });
 
       pythonProcess.stderr?.on('data', (data: Buffer) => {
-        error += data.toString();
+        const str = data.toString();
+        console.error('Python stderr:', str);
+        error += str;
       });
 
       pythonProcess.on('close', (code: number) => {
         clearTimeout(timeoutId);
+        console.log('Python process exited with code:', code);
         if (code !== 0) {
-          reject(new Error(`Python process exited with code ${code}\n${error}`));
+          reject(new Error(`Python process exited with code ${code}\nError: ${error}\nOutput: ${output}`));
         } else {
           resolve(output);
         }
@@ -88,9 +117,11 @@ finally:
     });
 
     // Parse the result
+    console.log('Raw Python output:', result);
     const data = JSON.parse(result as string);
     
     if (data.error) {
+      console.error('Python script reported error:', data.error);
       throw new Error(data.error);
     }
 
@@ -98,7 +129,7 @@ finally:
   } catch (error) {
     console.error("Error processing image:", error);
     return NextResponse.json(
-      { error: "Failed to process image" },
+      { error: error instanceof Error ? error.message : "Failed to process image" },
       { status: 500 }
     );
   }
