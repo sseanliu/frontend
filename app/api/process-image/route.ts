@@ -37,18 +37,43 @@ export async function POST(request: NextRequest) {
     const pythonScript = `
 import sys
 import os
+
 print("Current working directory:", os.getcwd())
+print("Directory contents:", os.listdir())
 print("Python path:", sys.path)
 
-lib_path = os.path.join(os.getcwd(), "lib")
-print("Adding lib path:", lib_path)
-sys.path.append(lib_path)
+# Add the lib directory to the Python path
+script_dir = os.path.dirname(os.path.abspath(__file__))
+lib_path = os.path.join(os.getcwd(), "frontend", "lib")
+print("Script directory:", script_dir)
+print("Lib path:", lib_path)
+print("Checking if lib path exists:", os.path.exists(lib_path))
+
+if os.path.exists(lib_path):
+    print("Lib directory contents:", os.listdir(lib_path))
+    sys.path.append(lib_path)
+else:
+    print("Lib path does not exist, trying alternative path...")
+    alt_lib_path = os.path.join(os.getcwd(), "lib")
+    print("Alternative lib path:", alt_lib_path)
+    print("Checking if alternative lib path exists:", os.path.exists(alt_lib_path))
+    if os.path.exists(alt_lib_path):
+        print("Alternative lib directory contents:", os.listdir(alt_lib_path))
+        sys.path.append(alt_lib_path)
+    else:
+        print("Neither lib path exists!")
+        sys.exit(1)
 
 try:
+    print("Attempting to import canny module...")
     import canny
     print("Successfully imported canny module")
-except Exception as e:
+except ImportError as e:
     print("Error importing canny module:", str(e))
+    print("Python path after import attempt:", sys.path)
+    sys.exit(1)
+except Exception as e:
+    print("Unexpected error importing canny module:", str(e))
     sys.exit(1)
 
 import json
@@ -84,10 +109,11 @@ finally:
       
       pythonProcess = spawn(pythonPath, ['-c', pythonScript], {
         env: { 
-          ...process.env, 
-          PYTHONPATH: join(process.cwd(), "lib"),
+          ...process.env,
+          PYTHONPATH: `${join(process.cwd(), "frontend", "lib")}:${join(process.cwd(), "lib")}`,
           PYTHONUNBUFFERED: "1"
-        }
+        },
+        cwd: process.cwd()
       });
       
       let output = '';
