@@ -1,4 +1,4 @@
-numpy==1.21.6
+numpy==1.26.4
 scikit-image==0.19.3
 svgwrite==1.4.3
 scipy==1.7.3
