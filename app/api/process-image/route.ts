@@ -7,6 +7,11 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 export const maxDuration = 30;
 
+// Configure body parser
+export const bodyParser = {
+  sizeLimit: '10mb'
+};
+
 export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData();
@@ -19,11 +24,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check file size
-    const MAX_SIZE = 5 * 1024 * 1024; // 5MB
+    // Check file size (10MB)
+    const MAX_SIZE = 10 * 1024 * 1024;
     if (image.size > MAX_SIZE) {
       return NextResponse.json(
-        { error: "Image size should be less than 5MB" },
+        { error: "Image size should be less than 10MB" },
         { status: 400 }
       );
     }
