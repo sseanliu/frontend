@@ -153,19 +153,33 @@ def process_image(image_data: str):
         if img.mode == 'RGBA':
             img = img.convert('RGB')
         
-        # Convert to numpy array
-        image = np.array(img)
+        # Calculate new size while maintaining aspect ratio
+        MAX_SIZE = 800  # Maximum dimension
+        ratio = min(MAX_SIZE / img.width, MAX_SIZE / img.height)
+        new_size = (int(img.width * ratio), int(img.height * ratio))
         
-        # Convert to grayscale
-        if len(image.shape) == 3:
-            image = rgb2gray(image)
-
-        # Compute the Canny filter for two values of sigma
-        edges1 = feature.canny(image)
-        edges2 = feature.canny(image, sigma=2)
-
-        # Convert edges to SVG strings
-        svg1 = edges_to_svg_string(edges1, frame_size=256)
-        svg2 = edges_to_svg_string(edges2, frame_size=256)
-
-        return svg1, svg2 
+        # Resize image if it's too large
+        if img.width > MAX_SIZE or img.height > MAX_SIZE:
+            img = img.resize(new_size, Image.Resampling.LANCZOS)
+        
+        # Convert to grayscale and numpy array
+        img = img.convert('L')  # Convert to grayscale using PIL
+        image = np.array(img, dtype=np.float32) / 255.0  # Normalize to [0, 1]
+        
+        # Free up memory
+        del img
+        
+        try:
+            # Compute the Canny filter for two values of sigma
+            edges1 = feature.canny(image)
+            svg1 = edges_to_svg_string(edges1, frame_size=256)
+            del edges1  # Free memory
+            
+            edges2 = feature.canny(image, sigma=2)
+            svg2 = edges_to_svg_string(edges2, frame_size=256)
+            del edges2  # Free memory
+            
+            return svg1, svg2
+        finally:
+            # Clean up
+            del image 
