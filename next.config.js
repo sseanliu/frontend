@@ -11,6 +11,17 @@ const nextConfig = {
   },
   env: {
     PYTHON_PATH: process.env.PYTHON_PATH || 'python',
+  },
+  experimental: {
+    serverActions: {
+      bodySizeLimit: '10mb'
+    }
+  },
+  api: {
+    bodyParser: {
+      sizeLimit: '10mb'
+    },
+    responseLimit: '10mb'
   }
 }
 
