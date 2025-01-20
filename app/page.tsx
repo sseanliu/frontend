@@ -32,7 +32,8 @@ export default function Home() {
     formData.append("image", file);
 
     try {
-      const response = await fetch("/api/process-image", {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+      const response = await fetch(`${apiUrl}/api/process-image`, {
         method: "POST",
         body: formData,
       });
